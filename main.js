@@ -10091,7 +10091,26 @@ var _user$project$Main$makeRequest = function (paste) {
 			withCredentials: false
 		});
 };
-var _user$project$Main$apiKey = '49ae65ebf81d165927b9cc4ff3d83fb0';
+var _user$project$Main$makeEmailRequest = function (paste) {
+	return _elm_lang$http$Http$request(
+		{
+			method: 'POST',
+			headers: {
+				ctor: '::',
+				_0: A2(_elm_lang$http$Http$header, 'accept', 'json'),
+				_1: {ctor: '[]'}
+			},
+			url: 'https://formspree.io/yux60000@gmail.com',
+			body: _user$project$Main$makeBody(paste),
+			expect: _elm_lang$http$Http$expectStringResponse(
+				function (_p0) {
+					return _elm_lang$core$Result$Ok(
+						{ctor: '_Tuple0'});
+				}),
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false
+		});
+};
 var _user$project$Main$mfStyleHx = _elm_lang$html$Html_Attributes$style(
 	{
 		ctor: '::',
@@ -10209,9 +10228,9 @@ var _user$project$Main$Trial = F4(
 	function (a, b, c, d) {
 		return {direction: a, position: b, tries: c, startedAt: d};
 	});
-var _user$project$Main$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {phase: a, gamer: b, test: c, trials1: d, trials2: e, readyToEnd: f, pasteUrl: g};
+var _user$project$Main$Model = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {phase: a, gamer: b, test: c, trials1: d, trials2: e, readyToEnd: f, pasteUrl: g, emailSent: h};
 	});
 var _user$project$Main$WrapUp = {ctor: 'WrapUp'};
 var _user$project$Main$Instructions2 = {ctor: 'Instructions2'};
@@ -10248,6 +10267,9 @@ var _user$project$Main$whichTestGenerator = A2(
 		return b ? _user$project$Main$Interference : _user$project$Main$NonInterference;
 	},
 	_elm_lang$core$Random$bool);
+var _user$project$Main$EmailSent = function (a) {
+	return {ctor: 'EmailSent', _0: a};
+};
 var _user$project$Main$GotPasteUrl = function (a) {
 	return {ctor: 'GotPasteUrl', _0: a};
 };
@@ -10266,7 +10288,8 @@ var _user$project$Main$init = {
 		trials1: {ctor: '[]'},
 		trials2: {ctor: '[]'},
 		readyToEnd: false,
-		pasteUrl: _elm_lang$core$Maybe$Nothing
+		pasteUrl: _elm_lang$core$Maybe$Nothing,
+		emailSent: false
 	},
 	_1: A2(_elm_lang$core$Random$generate, _user$project$Main$WhichTestFirst, _user$project$Main$whichTestGenerator)
 };
@@ -10280,16 +10303,16 @@ var _user$project$Main$CreateNextTrial = F2(
 var _user$project$Main$update = F2(
 	function (msg, model) {
 		var configGenerator = _elm_lang$core$Native_Utils.eq(model.test, _user$project$Main$NonInterference) ? _user$project$Main$arrowConfigGeneratorNonInterference : _user$project$Main$arrowConfigGeneratorInterference;
-		var _p0 = msg;
-		switch (_p0.ctor) {
+		var _p1 = msg;
+		switch (_p1.ctor) {
 			case 'GotKey':
 				if (_elm_lang$core$Native_Utils.eq(model.phase, _user$project$Main$Testing)) {
 					var trials = _elm_lang$core$Native_Utils.eq(model.test, _user$project$Main$NonInterference) ? model.trials1 : model.trials2;
 					var trial_ = _elm_lang$core$List$head(trials);
 					var newTest = _elm_lang$core$Native_Utils.eq(model.test, _user$project$Main$NonInterference) ? _user$project$Main$Interference : _user$project$Main$NonInterference;
 					var tried_ = function () {
-						var _p1 = _p0._0;
-						switch (_p1) {
+						var _p2 = _p1._0;
+						switch (_p2) {
 							case 40:
 								return _elm_lang$core$Maybe$Just(_user$project$Main$Down);
 							case 38:
@@ -10298,25 +10321,25 @@ var _user$project$Main$update = F2(
 								return _elm_lang$core$Maybe$Nothing;
 						}
 					}();
-					var _p2 = tried_;
-					if (_p2.ctor === 'Just') {
-						var _p6 = _p2._0;
-						var _p3 = trial_;
-						if (_p3.ctor === 'Just') {
-							var _p5 = _p3._0;
+					var _p3 = tried_;
+					if (_p3.ctor === 'Just') {
+						var _p7 = _p3._0;
+						var _p4 = trial_;
+						if (_p4.ctor === 'Just') {
+							var _p6 = _p4._0;
 							if (_elm_lang$core$Native_Utils.cmp(
 								_elm_lang$core$List$length(trials),
 								30) < 0) {
-								var tries_ = _p5.tries;
+								var tries_ = _p6.tries;
 								var newTrial = _elm_lang$core$Native_Utils.update(
-									_p5,
+									_p6,
 									{
-										tries: {ctor: '::', _0: _p6, _1: tries_}
+										tries: {ctor: '::', _0: _p7, _1: tries_}
 									});
 								var newTrials = function () {
-									var _p4 = _elm_lang$core$List$tail(trials);
-									if (_p4.ctor === 'Just') {
-										return {ctor: '::', _0: newTrial, _1: _p4._0};
+									var _p5 = _elm_lang$core$List$tail(trials);
+									if (_p5.ctor === 'Just') {
+										return {ctor: '::', _0: newTrial, _1: _p5._0};
 									} else {
 										return {
 											ctor: '::',
@@ -10325,7 +10348,7 @@ var _user$project$Main$update = F2(
 										};
 									}
 								}();
-								var matched = _elm_lang$core$Native_Utils.eq(_p6, _p5.direction) ? A2(_elm_lang$core$Random$generate, _user$project$Main$NewArrowConfig, configGenerator) : _elm_lang$core$Platform_Cmd$none;
+								var matched = _elm_lang$core$Native_Utils.eq(_p7, _p6.direction) ? A2(_elm_lang$core$Random$generate, _user$project$Main$NewArrowConfig, configGenerator) : _elm_lang$core$Platform_Cmd$none;
 								return _elm_lang$core$Native_Utils.eq(model.test, _user$project$Main$NonInterference) ? {
 									ctor: '_Tuple2',
 									_0: _elm_lang$core$Native_Utils.update(
@@ -10346,14 +10369,30 @@ var _user$project$Main$update = F2(
 									_0: _elm_lang$core$Native_Utils.update(
 										model,
 										{test: newTest, phase: newPhase, readyToEnd: !model.readyToEnd}),
-									_1: _elm_lang$core$Native_Utils.eq(newPhase, _user$project$Main$WrapUp) ? A2(
-										_elm_lang$http$Http$send,
-										_user$project$Main$GotPasteUrl,
-										_user$project$Main$makeRequest(
-											A2(
-												_elm_lang$core$Json_Encode$encode,
-												0,
-												_user$project$Main$encodeOutput(model)))) : _elm_lang$core$Platform_Cmd$none
+									_1: _elm_lang$core$Native_Utils.eq(newPhase, _user$project$Main$WrapUp) ? _elm_lang$core$Platform_Cmd$batch(
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$http$Http$send,
+												_user$project$Main$GotPasteUrl,
+												_user$project$Main$makeRequest(
+													A2(
+														_elm_lang$core$Json_Encode$encode,
+														0,
+														_user$project$Main$encodeOutput(model)))),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$http$Http$send,
+													_user$project$Main$EmailSent,
+													_user$project$Main$makeEmailRequest(
+														A2(
+															_elm_lang$core$Json_Encode$encode,
+															0,
+															_user$project$Main$encodeOutput(model)))),
+												_1: {ctor: '[]'}
+											}
+										}) : _elm_lang$core$Platform_Cmd$none
 								};
 							}
 						} else {
@@ -10373,12 +10412,12 @@ var _user$project$Main$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{gamer: _p0._0, phase: _user$project$Main$Instructions1}),
+						{gamer: _p1._0, phase: _user$project$Main$Instructions1}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'NextScreen':
-				var _p7 = model.phase;
-				switch (_p7.ctor) {
+				var _p8 = model.phase;
+				switch (_p8.ctor) {
 					case 'Instructions1':
 						return {
 							ctor: '_Tuple2',
@@ -10402,12 +10441,12 @@ var _user$project$Main$update = F2(
 							{ctor: '[]'});
 				}
 			case 'CreateNextTrial':
-				var _p11 = _p0._1;
-				var _p10 = _p0._0._0;
-				var _p9 = _p0._0._1;
+				var _p12 = _p1._1;
+				var _p11 = _p1._0._0;
+				var _p10 = _p1._0._1;
 				var newModel = function () {
-					var _p8 = model.test;
-					if (_p8.ctor === 'Interference') {
+					var _p9 = model.test;
+					if (_p9.ctor === 'Interference') {
 						return _elm_lang$core$Native_Utils.update(
 							model,
 							{
@@ -10415,10 +10454,10 @@ var _user$project$Main$update = F2(
 									ctor: '::',
 									_0: A4(
 										_user$project$Main$Trial,
+										_p11,
 										_p10,
-										_p9,
 										{ctor: '[]'},
-										_p11),
+										_p12),
 									_1: model.trials2
 								}
 							});
@@ -10430,10 +10469,10 @@ var _user$project$Main$update = F2(
 									ctor: '::',
 									_0: A4(
 										_user$project$Main$Trial,
+										_p11,
 										_p10,
-										_p9,
 										{ctor: '[]'},
-										_p11),
+										_p12),
 									_1: model.trials1
 								}
 							});
@@ -10445,7 +10484,7 @@ var _user$project$Main$update = F2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{test: _p0._0}),
+						{test: _p1._0}),
 					{ctor: '[]'});
 			case 'NewArrowConfig':
 				return {
@@ -10453,21 +10492,36 @@ var _user$project$Main$update = F2(
 					_0: model,
 					_1: A2(
 						_elm_lang$core$Task$perform,
-						_user$project$Main$CreateNextTrial(_p0._0),
+						_user$project$Main$CreateNextTrial(_p1._0),
 						_elm_lang$core$Time$now)
 				};
-			default:
-				var _p12 = _p0._0;
-				if (_p12.ctor === 'Ok') {
+			case 'GotPasteUrl':
+				var _p13 = _p1._0;
+				if (_p13.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								pasteUrl: _elm_lang$core$Maybe$Just(_p12._0)
+								pasteUrl: _elm_lang$core$Maybe$Just(_p13._0)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
+				} else {
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						model,
+						{ctor: '[]'});
+				}
+			default:
+				var _p14 = _p1._0;
+				if (_p14.ctor === 'Ok') {
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						_elm_lang$core$Native_Utils.update(
+							model,
+							{emailSent: true}),
+						{ctor: '[]'});
 				} else {
 					return A2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
@@ -10502,8 +10556,8 @@ var _user$project$Main$view = function (model) {
 			_1: {
 				ctor: '::',
 				_0: function () {
-					var _p13 = model.phase;
-					switch (_p13.ctor) {
+					var _p15 = model.phase;
+					switch (_p15.ctor) {
 						case 'UserInfo':
 							return A2(
 								_elm_lang$html$Html$div,
@@ -10686,9 +10740,9 @@ var _user$project$Main$view = function (model) {
 						case 'Testing':
 							var trials = _elm_lang$core$Native_Utils.eq(model.test, _user$project$Main$NonInterference) ? model.trials1 : model.trials2;
 							var trial_ = function () {
-								var _p14 = trials;
-								if (_p14.ctor === '::') {
-									return _elm_lang$core$Maybe$Just(_p14._0);
+								var _p16 = trials;
+								if (_p16.ctor === '::') {
+									return _elm_lang$core$Maybe$Just(_p16._0);
 								} else {
 									return _elm_lang$core$Maybe$Nothing;
 								}
@@ -10714,10 +10768,10 @@ var _user$project$Main$view = function (model) {
 									_1: {
 										ctor: '::',
 										_0: function () {
-											var _p15 = trial_;
-											if (_p15.ctor === 'Just') {
-												var _p16 = _p15._0;
-												var imgSrc = (_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Top)) ? 'images/top-up.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Top)) ? 'images/top-down.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Bottom)) ? 'images/bottom-up.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Bottom)) ? 'images/bottom-down.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Middle)) ? 'images/middle-up.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Middle)) ? 'images/middle-down.png' : '')))));
+											var _p17 = trial_;
+											if (_p17.ctor === 'Just') {
+												var _p18 = _p17._0;
+												var imgSrc = (_elm_lang$core$Native_Utils.eq(_p18.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p18.position, _user$project$Main$Top)) ? 'images/top-up.png' : ((_elm_lang$core$Native_Utils.eq(_p18.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p18.position, _user$project$Main$Top)) ? 'images/top-down.png' : ((_elm_lang$core$Native_Utils.eq(_p18.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p18.position, _user$project$Main$Bottom)) ? 'images/bottom-up.png' : ((_elm_lang$core$Native_Utils.eq(_p18.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p18.position, _user$project$Main$Bottom)) ? 'images/bottom-down.png' : ((_elm_lang$core$Native_Utils.eq(_p18.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p18.position, _user$project$Main$Middle)) ? 'images/middle-up.png' : ((_elm_lang$core$Native_Utils.eq(_p18.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p18.position, _user$project$Main$Middle)) ? 'images/middle-down.png' : '')))));
 												return A2(
 													_elm_lang$html$Html$div,
 													{
@@ -10769,44 +10823,90 @@ var _user$project$Main$view = function (model) {
 										{ctor: '[]'},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('Thank you for completing this test! Please paste the following link the in the Reddit thread! If the link fails to generate, please copy and paste the contents of the textbox to Pastebin and post or PM me the link.'),
+											_0: _elm_lang$html$Html$text('Thank you for completing this test!'),
 											_1: {ctor: '[]'}
 										}),
 									_1: {
 										ctor: '::',
 										_0: function () {
-											var _p17 = model.pasteUrl;
-											if (_p17.ctor === 'Just') {
+											if (model.emailSent) {
 												return A2(
 													_elm_lang$html$Html$p,
 													{ctor: '[]'},
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html$text(
-															A2(_elm_lang$core$Maybe$withDefault, 'Loading URL.....', model.pasteUrl)),
+														_0: _elm_lang$html$Html$text('Your testing data has been submitted. Thanks!'),
 														_1: {ctor: '[]'}
 													});
 											} else {
-												return A2(
-													_elm_lang$html$Html$textarea,
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$rows(25),
-														_1: {
+												var _p19 = model.pasteUrl;
+												if (_p19.ctor === 'Just') {
+													return A2(
+														_elm_lang$html$Html$div,
+														{ctor: '[]'},
+														{
 															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$cols(80),
-															_1: {ctor: '[]'}
-														}
-													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text(
-															A2(
-																_elm_lang$core$Json_Encode$encode,
-																0,
-																_user$project$Main$encodeOutput(model))),
-														_1: {ctor: '[]'}
-													});
+															_0: A2(
+																_elm_lang$html$Html$p,
+																{ctor: '[]'},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text('Please post this URL into the comments section of the Reddit thread. Thanks!'),
+																	_1: {ctor: '[]'}
+																}),
+															_1: {
+																ctor: '::',
+																_0: A2(
+																	_elm_lang$html$Html$p,
+																	{ctor: '[]'},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text(_p19._0),
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {ctor: '[]'}
+															}
+														});
+												} else {
+													return A2(
+														_elm_lang$html$Html$div,
+														{ctor: '[]'},
+														{
+															ctor: '::',
+															_0: A2(
+																_elm_lang$html$Html$p,
+																{ctor: '[]'},
+																{
+																	ctor: '::',
+																	_0: _elm_lang$html$Html$text('It seems the data submission procedure has failed... If you\'d be so kind as to copy and paste this into Pastebin, and then comment the link in the thread, that would be amazing!'),
+																	_1: {ctor: '[]'}
+																}),
+															_1: {
+																ctor: '::',
+																_0: A2(
+																	_elm_lang$html$Html$textarea,
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html_Attributes$rows(25),
+																		_1: {
+																			ctor: '::',
+																			_0: _elm_lang$html$Html_Attributes$cols(80),
+																			_1: {ctor: '[]'}
+																		}
+																	},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text(
+																			A2(
+																				_elm_lang$core$Json_Encode$encode,
+																				0,
+																				_user$project$Main$encodeOutput(model))),
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {ctor: '[]'}
+															}
+														});
+												}
 											}
 										}(),
 										_1: {

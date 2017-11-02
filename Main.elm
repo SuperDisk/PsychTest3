@@ -82,6 +82,7 @@ type alias Model =
     , trials2 : List Trial
     , readyToEnd : Bool
     , pasteUrl : Maybe String
+    , emailSent : Bool
     }
 
 
@@ -93,6 +94,7 @@ type Msg
     | WhichTestFirst TestType
     | NewArrowConfig ( ArrowDirection, ArrowPosition )
     | GotPasteUrl (Result Http.Error String)
+    | EmailSent (Result Http.Error ())
 
 
 
@@ -204,7 +206,10 @@ update msg model =
                                                     , readyToEnd = not model.readyToEnd
                                                   }
                                                 , if newPhase == WrapUp then
-                                                    (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model))))
+                                                    Cmd.batch
+                                                        [ (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model))))
+                                                        , (Http.send EmailSent (makeEmailRequest (JE.encode 0 (encodeOutput model))))
+                                                        ]
                                                   else
                                                     Cmd.none
                                                 )
@@ -274,8 +279,16 @@ update msg model =
                     _ ->
                         model ! []
 
+            EmailSent res ->
+                case res of
+                    Ok () ->
+                        {model| emailSent = True} ! []
+                    Err _ ->
+                        model ! []
 
 
+
+--well, whatever.
 --({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
 
 
@@ -365,13 +378,22 @@ view model =
 
             WrapUp ->
                 div []
-                    [ p [] [ text """Thank you for completing this test! Please paste the following link the in the Reddit thread! If the link fails to generate, please copy and paste the contents of the textbox to Pastebin and post or PM me the link.""" ]
-                    , case model.pasteUrl of
-                        Just url ->
-                            p [] [ text (Maybe.withDefault "Loading URL....." model.pasteUrl) ]
+                    [ p [] [ text """Thank you for completing this test!""" ]
+                    , if model.emailSent then
+                        p [] [ text "Your testing data has been submitted. Thanks!" ]
+                      else
+                        case model.pasteUrl of
+                            Just url ->
+                                div []
+                                    [ p [] [ text "Please post this URL into the comments section of the Reddit thread. Thanks!" ]
+                                    , p [] [ text url ]
+                                    ]
 
-                        Nothing ->
-                            textarea [ rows 25, cols 80 ] [ text (JE.encode 0 (encodeOutput model)) ]
+                            Nothing ->
+                                div []
+                                    [ p [] [ text "It seems the data submission procedure has failed... If you'd be so kind as to copy and paste this into Pastebin, and then comment the link in the thread, that would be amazing!" ]
+                                    , textarea [ rows 25, cols 80 ] [ text (JE.encode 0 (encodeOutput model)) ]
+                                    ]
                     , p [] [ text "Again, thank you so much for doing this test!" ]
                     ]
 
@@ -430,18 +452,10 @@ arrowConfigGeneratorNonInterference : Random.Generator ( ArrowDirection, ArrowPo
 arrowConfigGeneratorNonInterference =
     Random.pair arrowDirectionGenerator <| Random.Extra.constant Middle
 
-
-apiKey : String
-apiKey =
-    "49ae65ebf81d165927b9cc4ff3d83fb0"
-
-
 makeBody paste =
     Http.multipartBody
         [ Http.stringPart "content" paste
         ]
-
-
 
 -- [ Http.stringPart "api_dev_key" apiKey
 -- , Http.stringPart "api_option" "paste"
@@ -462,6 +476,19 @@ makeRequest paste =
         }
 
 
+makeEmailRequest : String -> Http.Request ()
+makeEmailRequest paste =
+    Http.request
+        { method = "POST"
+        , headers = [ Http.header "accept" "json" ]
+        , url = "https://formspree.io/yux60000@gmail.com"
+        , body = makeBody paste
+        , expect = Http.expectStringResponse (\_ -> Ok ())
+        , timeout = Nothing
+        , withCredentials = False
+        }
+
+
 init : ( Model, Cmd Msg )
 init =
     ( { phase = UserInfo
@@ -471,6 +498,7 @@ init =
       , trials2 = []
       , readyToEnd = False
       , pasteUrl = Nothing
+      , emailSent = False
       }
     , Random.generate (WhichTestFirst) whichTestGenerator
     )
