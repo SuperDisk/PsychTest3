@@ -438,10 +438,15 @@ apiKey =
 
 makeBody paste =
     Http.multipartBody
-        [ Http.stringPart "api_dev_key" apiKey
-        , Http.stringPart "api_option" "paste"
-        , Http.stringPart "api_paste_code" paste
+        [ Http.stringPart "content" paste
         ]
+
+
+
+-- [ Http.stringPart "api_dev_key" apiKey
+-- , Http.stringPart "api_option" "paste"
+-- , Http.stringPart "api_paste_code" paste
+-- ]
 
 
 makeRequest : String -> Http.Request String
@@ -449,7 +454,7 @@ makeRequest paste =
     Http.request
         { method = "POST"
         , headers = []
-        , url = "https://cors-anywhere.herokuapp.com/https://pastebin.com/api/api_post.php"
+        , url = "https://cors-anywhere.herokuapp.com/http://dpaste.com/api/v2/"
         , body = makeBody paste
         , expect = Http.expectString
         , timeout = Nothing

@@ -10071,21 +10071,12 @@ var _elm_lang$keyboard$Keyboard$subMap = F2(
 	});
 _elm_lang$core$Native_Platform.effectManagers['Keyboard'] = {pkg: 'elm-lang/keyboard', init: _elm_lang$keyboard$Keyboard$init, onEffects: _elm_lang$keyboard$Keyboard$onEffects, onSelfMsg: _elm_lang$keyboard$Keyboard$onSelfMsg, tag: 'sub', subMap: _elm_lang$keyboard$Keyboard$subMap};
 
-var _user$project$Main$apiKey = '49ae65ebf81d165927b9cc4ff3d83fb0';
 var _user$project$Main$makeBody = function (paste) {
 	return _elm_lang$http$Http$multipartBody(
 		{
 			ctor: '::',
-			_0: A2(_elm_lang$http$Http$stringPart, 'api_dev_key', _user$project$Main$apiKey),
-			_1: {
-				ctor: '::',
-				_0: A2(_elm_lang$http$Http$stringPart, 'api_option', 'paste'),
-				_1: {
-					ctor: '::',
-					_0: A2(_elm_lang$http$Http$stringPart, 'api_paste_code', paste),
-					_1: {ctor: '[]'}
-				}
-			}
+			_0: A2(_elm_lang$http$Http$stringPart, 'content', paste),
+			_1: {ctor: '[]'}
 		});
 };
 var _user$project$Main$makeRequest = function (paste) {
@@ -10093,13 +10084,14 @@ var _user$project$Main$makeRequest = function (paste) {
 		{
 			method: 'POST',
 			headers: {ctor: '[]'},
-			url: 'https://cors-anywhere.herokuapp.com/https://pastebin.com/api/api_post.php',
+			url: 'https://cors-anywhere.herokuapp.com/http://dpaste.com/api/v2/',
 			body: _user$project$Main$makeBody(paste),
 			expect: _elm_lang$http$Http$expectString,
 			timeout: _elm_lang$core$Maybe$Nothing,
 			withCredentials: false
 		});
 };
+var _user$project$Main$apiKey = '49ae65ebf81d165927b9cc4ff3d83fb0';
 var _user$project$Main$mfStyleHx = _elm_lang$html$Html_Attributes$style(
 	{
 		ctor: '::',
