@@ -2,9 +2,12 @@
 
 <body style="overflow:hidden;">
   <script>
-  var node = document.getElementById("elm-main");
-  var elmApp = Elm.Main.embed(node);
-</script>
+    window.onload = function()
+    {
+      var node = document.getElementById("elm-main");
+      var elmApp = Elm.Main.embed(node);
+    }
+  </script>
   
   <div id="elm-main"></div>
 </body>
