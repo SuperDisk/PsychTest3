@@ -319,17 +319,17 @@ view model =
                                 let
                                     imgSrc =
                                         if trial.direction == Up && trial.position == Top then
-                                            "/images/top-up.png"
+                                            "images/top-up.png"
                                         else if trial.direction == Down && trial.position == Top then
-                                            "/images/top-down.png"
+                                            "images/top-down.png"
                                         else if trial.direction == Up && trial.position == Bottom then
-                                            "/images/bottom-up.png"
+                                            "images/bottom-up.png"
                                         else if trial.direction == Down && trial.position == Bottom then
-                                            "/images/bottom-down.png"
+                                            "images/bottom-down.png"
                                         else if trial.direction == Up && trial.position == Middle then
-                                            "/images/middle-up.png"
+                                            "images/middle-up.png"
                                         else if trial.direction == Down && trial.position == Middle then
-                                            "/images/middle-down.png"
+                                            "images/middle-down.png"
                                         else
                                             ""
                                 in
