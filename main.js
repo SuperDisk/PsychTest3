@@ -10089,11 +10089,16 @@ var _user$project$Main$makeBody = function (paste) {
 		});
 };
 var _user$project$Main$makeRequest = function (paste) {
-	return A3(
-		_elm_lang$http$Http$post,
-		'https://pastebin.com/api/api_post.php',
-		_user$project$Main$makeBody(paste),
-		_elm_lang$core$Json_Decode$string);
+	return _elm_lang$http$Http$request(
+		{
+			method: 'POST',
+			headers: {ctor: '[]'},
+			url: 'https://cors-anywhere.herokuapp.com/https://pastebin.com/api/api_post.php',
+			body: _user$project$Main$makeBody(paste),
+			expect: _elm_lang$http$Http$expectString,
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false
+		});
 };
 var _user$project$Main$mfStyleHx = _elm_lang$html$Html_Attributes$style(
 	{
@@ -10477,7 +10482,8 @@ var _user$project$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								pasteUrl: _elm_lang$core$Maybe$Just('Failed to load paste url...')
+								pasteUrl: _elm_lang$core$Maybe$Just(
+									_elm_lang$core$Basics$toString(_p12._0))
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};

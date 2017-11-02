@@ -265,7 +265,11 @@ update msg model =
                 case res of
                     Ok url ->
                         ({model | pasteUrl = Just url}, Cmd.none)
-                    _ -> ({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
+
+                    Err err ->
+                        ({model | pasteUrl = Just <| toString err}, Cmd.none)
+
+                   -- _ -> ({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
 
 view : Model -> Html Msg
 view model =
@@ -426,12 +430,16 @@ makeBody paste =
         ]
 
 makeRequest : String -> Http.Request String
-makeRequest paste =
-    Http.post 
-        "https://pastebin.com/api/api_post.php"
-        (makeBody paste)
-        JD.string
-
+makeRequest paste=
+  Http.request
+    { method = "POST"
+    , headers = []
+    , url = "https://cors-anywhere.herokuapp.com/https://pastebin.com/api/api_post.php"
+    , body = makeBody paste
+    , expect = Http.expectString
+    , timeout = Nothing
+    , withCredentials = False
+    }
 
 init : ( Model, Cmd Msg )
 init =
