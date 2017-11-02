@@ -267,8 +267,7 @@ view model =
                 div []
                     [ text "Hi, thanks for taking this test!"
                     , br [] []
-                    , text """This study is a factorial study on the Spatial Stroop Effect that separates the two groups on whether or not the particpant
-                    frequently plays video games (more than 0 hours per week)"""
+                    , text """This study is a factorial study on the Spatial Stroop Effect that separates the two groups on whether or not the participant frequently plays video games (more than 0 hours per week)"""
                     , br [] []
                     , br [] []
                     , text "Do you play video games at least semi-frequently?"
