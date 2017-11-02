@@ -10477,15 +10477,10 @@ var _user$project$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								pasteUrl: _elm_lang$core$Maybe$Just('Failed to load paste url...')
-							}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
+					return A2(
+						_elm_lang$core$Platform_Cmd_ops['!'],
+						model,
+						{ctor: '[]'});
 				}
 		}
 	});
@@ -10787,49 +10782,52 @@ var _user$project$Main$view = function (model) {
 										}),
 									_1: {
 										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$p,
-											{ctor: '[]'},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text(
-													A2(_elm_lang$core$Maybe$withDefault, 'Loading URL.....', model.pasteUrl)),
-												_1: {ctor: '[]'}
-											}),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$textarea,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$rows(25),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$cols(80),
-														_1: {ctor: '[]'}
-													}
-												},
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html$text(
-														A2(
-															_elm_lang$core$Json_Encode$encode,
-															0,
-															_user$project$Main$encodeOutput(model))),
-													_1: {ctor: '[]'}
-												}),
-											_1: {
-												ctor: '::',
-												_0: A2(
+										_0: function () {
+											var _p17 = model.pasteUrl;
+											if (_p17.ctor === 'Just') {
+												return A2(
 													_elm_lang$html$Html$p,
 													{ctor: '[]'},
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html$text('Again, thank you so much for doing this test!'),
+														_0: _elm_lang$html$Html$text(
+															A2(_elm_lang$core$Maybe$withDefault, 'Loading URL.....', model.pasteUrl)),
 														_1: {ctor: '[]'}
-													}),
-												_1: {ctor: '[]'}
+													});
+											} else {
+												return A2(
+													_elm_lang$html$Html$textarea,
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$rows(25),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$cols(80),
+															_1: {ctor: '[]'}
+														}
+													},
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html$text(
+															A2(
+																_elm_lang$core$Json_Encode$encode,
+																0,
+																_user$project$Main$encodeOutput(model))),
+														_1: {ctor: '[]'}
+													});
 											}
+										}(),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$p,
+												{ctor: '[]'},
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html$text('Again, thank you so much for doing this test!'),
+													_1: {ctor: '[]'}
+												}),
+											_1: {ctor: '[]'}
 										}
 									}
 								});

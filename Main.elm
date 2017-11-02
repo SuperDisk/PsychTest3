@@ -81,7 +81,7 @@ type alias Model =
     , trials1 : List Trial
     , trials2 : List Trial
     , readyToEnd : Bool
-    , pasteUrl: Maybe String
+    , pasteUrl : Maybe String
     }
 
 
@@ -203,7 +203,10 @@ update msg model =
                                                     , phase = newPhase
                                                     , readyToEnd = not model.readyToEnd
                                                   }
-                                                , if newPhase == WrapUp then (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model)))) else Cmd.none
+                                                , if newPhase == WrapUp then
+                                                    (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model))))
+                                                  else
+                                                    Cmd.none
                                                 )
 
                                     Nothing ->
@@ -264,12 +267,17 @@ update msg model =
             GotPasteUrl res ->
                 case res of
                     Ok url ->
-                        ({model | pasteUrl = Just url}, Cmd.none)
+                        ( { model | pasteUrl = Just url }, Cmd.none )
 
                     --Err err ->
-                        --({model | pasteUrl = Just <| toString err}, Cmd.none)
+                    --({model | pasteUrl = Just <| toString err}, Cmd.none)
+                    _ ->
+                        model ! []
 
-                    _ -> ({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
+
+
+--({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
+
 
 view : Model -> Html Msg
 view model =
@@ -358,8 +366,12 @@ view model =
             WrapUp ->
                 div []
                     [ p [] [ text """Thank you for completing this test! Please paste the following link the in the Reddit thread! If the link fails to generate, please copy and paste the contents of the textbox to Pastebin and post or PM me the link.""" ]
-                    , p [] [ text (Maybe.withDefault "Loading URL....."  model.pasteUrl) ]
-                    , textarea [rows 25, cols 80] [text (JE.encode 0 (encodeOutput model))]
+                    , case model.pasteUrl of
+                        Just url ->
+                            p [] [ text (Maybe.withDefault "Loading URL....." model.pasteUrl) ]
+
+                        Nothing ->
+                            textarea [ rows 25, cols 80 ] [ text (JE.encode 0 (encodeOutput model)) ]
                     , p [] [ text "Again, thank you so much for doing this test!" ]
                     ]
 
@@ -431,17 +443,19 @@ makeBody paste =
         , Http.stringPart "api_paste_code" paste
         ]
 
+
 makeRequest : String -> Http.Request String
-makeRequest paste=
-  Http.request
-    { method = "POST"
-    , headers = []
-    , url = "https://cors-anywhere.herokuapp.com/https://pastebin.com/api/api_post.php"
-    , body = makeBody paste
-    , expect = Http.expectString
-    , timeout = Nothing
-    , withCredentials = False
-    }
+makeRequest paste =
+    Http.request
+        { method = "POST"
+        , headers = []
+        , url = "https://cors-anywhere.herokuapp.com/https://pastebin.com/api/api_post.php"
+        , body = makeBody paste
+        , expect = Http.expectString
+        , timeout = Nothing
+        , withCredentials = False
+        }
+
 
 init : ( Model, Cmd Msg )
 init =
