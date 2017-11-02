@@ -26,6 +26,7 @@ encodeTrial trial =
         [ ( "direction", JE.string <| toString trial.direction )
         , ( "position", JE.string <| toString trial.position )
         , ( "tries", JE.list <| List.map (\x -> JE.string <| toString x) <| List.reverse trial.tries )
+        , ( "startedAt", JE.float trial.startedAt )
         ]
 
 
@@ -313,7 +314,7 @@ view model =
                                 Nothing
                 in
                     div []
-                        [ h3 [] [text <| "Trial " ++ (toString <| List.length trials)]
+                        [ h3 [] [ text <| "Trial " ++ (toString <| List.length trials) ]
                         , case trial_ of
                             Just trial ->
                                 let

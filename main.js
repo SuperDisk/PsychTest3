@@ -9774,7 +9774,15 @@ var _user$project$Main$encodeTrial = function (trial) {
 								},
 								_elm_lang$core$List$reverse(trial.tries)))
 					},
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'startedAt',
+							_1: _elm_lang$core$Json_Encode$float(trial.startedAt)
+						},
+						_1: {ctor: '[]'}
+					}
 				}
 			}
 		});
