@@ -267,10 +267,11 @@ view model =
                 div []
                     [ text "Hi, thanks for taking this test!"
                     , br [] []
-                    , text "This study is a factorial study on the Spatial Stroop Effect that separates the two groups on whether or not the particpant is a gamer."
+                    , text """This study is a factorial study on the Spatial Stroop Effect that separates the two groups on whether or not the particpant
+                    frequently plays video games (more than 0 hours per week)"""
                     , br [] []
                     , br [] []
-                    , text "Are you a gamer?"
+                    , text "Do you play video games at least semi-frequently?"
                     , br [] []
                     , br [] []
                     , span []
@@ -346,7 +347,7 @@ view model =
                 div []
                     [ p [] [ text """Thank you so much for completing this test! Please copy the following test and paste it on Pastebin,
                     then post the link to the paste in the Reddit thread! Again, thank you so much!""" ]
-                    , p [] [ a [ href "http://pastebin.com", target "_blank"] [ text "Link to Pastebin" ] ]
+                    , p [] [ a [ href "http://pastebin.com", target "_blank" ] [ text "Link to Pastebin" ] ]
                     , textarea [ rows 20, cols 50 ]
                         [ text <| (JE.encode 0 (encodeOutput model))
                         ]

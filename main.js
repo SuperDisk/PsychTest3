@@ -10108,7 +10108,7 @@ var _user$project$Main$view = function (model) {
 											{ctor: '[]'}),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('This study is a factorial study on the Spatial Stroop Effect that separates the two groups on whether or not the particpant is a gamer.'),
+											_0: _elm_lang$html$Html$text('This study is a factorial study on the Spatial Stroop Effect that separates the two groups on whether or not the particpant\n                    frequently plays video games (more than 0 hours per week)'),
 											_1: {
 												ctor: '::',
 												_0: A2(
@@ -10123,7 +10123,7 @@ var _user$project$Main$view = function (model) {
 														{ctor: '[]'}),
 													_1: {
 														ctor: '::',
-														_0: _elm_lang$html$Html$text('Are you a gamer?'),
+														_0: _elm_lang$html$Html$text('Do you play video games at least semi-frequently?'),
 														_1: {
 															ctor: '::',
 															_0: A2(
