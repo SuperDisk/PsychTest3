@@ -10369,30 +10369,14 @@ var _user$project$Main$update = F2(
 									_0: _elm_lang$core$Native_Utils.update(
 										model,
 										{test: newTest, phase: newPhase, readyToEnd: !model.readyToEnd}),
-									_1: _elm_lang$core$Native_Utils.eq(newPhase, _user$project$Main$WrapUp) ? _elm_lang$core$Platform_Cmd$batch(
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$http$Http$send,
-												_user$project$Main$GotPasteUrl,
-												_user$project$Main$makeRequest(
-													A2(
-														_elm_lang$core$Json_Encode$encode,
-														0,
-														_user$project$Main$encodeOutput(model)))),
-											_1: {
-												ctor: '::',
-												_0: A2(
-													_elm_lang$http$Http$send,
-													_user$project$Main$EmailSent,
-													_user$project$Main$makeEmailRequest(
-														A2(
-															_elm_lang$core$Json_Encode$encode,
-															0,
-															_user$project$Main$encodeOutput(model)))),
-												_1: {ctor: '[]'}
-											}
-										}) : _elm_lang$core$Platform_Cmd$none
+									_1: _elm_lang$core$Native_Utils.eq(newPhase, _user$project$Main$WrapUp) ? A2(
+										_elm_lang$http$Http$send,
+										_user$project$Main$EmailSent,
+										_user$project$Main$makeEmailRequest(
+											A2(
+												_elm_lang$core$Json_Encode$encode,
+												0,
+												_user$project$Main$encodeOutput(model)))) : _elm_lang$core$Platform_Cmd$none
 								};
 							}
 						} else {
@@ -10523,10 +10507,18 @@ var _user$project$Main$update = F2(
 							{emailSent: true}),
 						{ctor: '[]'});
 				} else {
-					return A2(
-						_elm_lang$core$Platform_Cmd_ops['!'],
-						model,
-						{ctor: '[]'});
+					return {
+						ctor: '_Tuple2',
+						_0: model,
+						_1: A2(
+							_elm_lang$http$Http$send,
+							_user$project$Main$GotPasteUrl,
+							_user$project$Main$makeRequest(
+								A2(
+									_elm_lang$core$Json_Encode$encode,
+									0,
+									_user$project$Main$encodeOutput(model))))
+					};
 				}
 		}
 	});

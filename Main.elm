@@ -206,10 +206,7 @@ update msg model =
                                                     , readyToEnd = not model.readyToEnd
                                                   }
                                                 , if newPhase == WrapUp then
-                                                    Cmd.batch
-                                                        [ (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model))))
-                                                        , (Http.send EmailSent (makeEmailRequest (JE.encode 0 (encodeOutput model))))
-                                                        ]
+                                                    (Http.send EmailSent (makeEmailRequest (JE.encode 0 (encodeOutput model))))
                                                   else
                                                     Cmd.none
                                                 )
@@ -284,7 +281,7 @@ update msg model =
                     Ok () ->
                         {model| emailSent = True} ! []
                     Err _ ->
-                        model ! []
+                        (model, (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model)))))
 
 
 
