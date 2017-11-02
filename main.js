@@ -9541,6 +9541,367 @@ var _elm_lang$html$Html_Events$Options = F2(
 		return {stopPropagation: a, preventDefault: b};
 	});
 
+var _elm_lang$http$Native_Http = function() {
+
+
+// ENCODING AND DECODING
+
+function encodeUri(string)
+{
+	return encodeURIComponent(string);
+}
+
+function decodeUri(string)
+{
+	try
+	{
+		return _elm_lang$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch(e)
+	{
+		return _elm_lang$core$Maybe$Nothing;
+	}
+}
+
+
+// SEND REQUEST
+
+function toTask(request, maybeProgress)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var xhr = new XMLHttpRequest();
+
+		configureProgress(xhr, maybeProgress);
+
+		xhr.addEventListener('error', function() {
+			callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'NetworkError' }));
+		});
+		xhr.addEventListener('timeout', function() {
+			callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'Timeout' }));
+		});
+		xhr.addEventListener('load', function() {
+			callback(handleResponse(xhr, request.expect.responseToResult));
+		});
+
+		try
+		{
+			xhr.open(request.method, request.url, true);
+		}
+		catch (e)
+		{
+			return callback(_elm_lang$core$Native_Scheduler.fail({ ctor: 'BadUrl', _0: request.url }));
+		}
+
+		configureRequest(xhr, request);
+		send(xhr, request.body);
+
+		return function() { xhr.abort(); };
+	});
+}
+
+function configureProgress(xhr, maybeProgress)
+{
+	if (maybeProgress.ctor === 'Nothing')
+	{
+		return;
+	}
+
+	xhr.addEventListener('progress', function(event) {
+		if (!event.lengthComputable)
+		{
+			return;
+		}
+		_elm_lang$core$Native_Scheduler.rawSpawn(maybeProgress._0({
+			bytes: event.loaded,
+			bytesExpected: event.total
+		}));
+	});
+}
+
+function configureRequest(xhr, request)
+{
+	function setHeader(pair)
+	{
+		xhr.setRequestHeader(pair._0, pair._1);
+	}
+
+	A2(_elm_lang$core$List$map, setHeader, request.headers);
+	xhr.responseType = request.expect.responseType;
+	xhr.withCredentials = request.withCredentials;
+
+	if (request.timeout.ctor === 'Just')
+	{
+		xhr.timeout = request.timeout._0;
+	}
+}
+
+function send(xhr, body)
+{
+	switch (body.ctor)
+	{
+		case 'EmptyBody':
+			xhr.send();
+			return;
+
+		case 'StringBody':
+			xhr.setRequestHeader('Content-Type', body._0);
+			xhr.send(body._1);
+			return;
+
+		case 'FormDataBody':
+			xhr.send(body._0);
+			return;
+	}
+}
+
+
+// RESPONSES
+
+function handleResponse(xhr, responseToResult)
+{
+	var response = toResponse(xhr);
+
+	if (xhr.status < 200 || 300 <= xhr.status)
+	{
+		response.body = xhr.responseText;
+		return _elm_lang$core$Native_Scheduler.fail({
+			ctor: 'BadStatus',
+			_0: response
+		});
+	}
+
+	var result = responseToResult(response);
+
+	if (result.ctor === 'Ok')
+	{
+		return _elm_lang$core$Native_Scheduler.succeed(result._0);
+	}
+	else
+	{
+		response.body = xhr.responseText;
+		return _elm_lang$core$Native_Scheduler.fail({
+			ctor: 'BadPayload',
+			_0: result._0,
+			_1: response
+		});
+	}
+}
+
+function toResponse(xhr)
+{
+	return {
+		status: { code: xhr.status, message: xhr.statusText },
+		headers: parseHeaders(xhr.getAllResponseHeaders()),
+		url: xhr.responseURL,
+		body: xhr.response
+	};
+}
+
+function parseHeaders(rawHeaders)
+{
+	var headers = _elm_lang$core$Dict$empty;
+
+	if (!rawHeaders)
+	{
+		return headers;
+	}
+
+	var headerPairs = rawHeaders.split('\u000d\u000a');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf('\u003a\u0020');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3(_elm_lang$core$Dict$update, key, function(oldValue) {
+				if (oldValue.ctor === 'Just')
+				{
+					return _elm_lang$core$Maybe$Just(value + ', ' + oldValue._0);
+				}
+				return _elm_lang$core$Maybe$Just(value);
+			}, headers);
+		}
+	}
+
+	return headers;
+}
+
+
+// EXPECTORS
+
+function expectStringResponse(responseToResult)
+{
+	return {
+		responseType: 'text',
+		responseToResult: responseToResult
+	};
+}
+
+function mapExpect(func, expect)
+{
+	return {
+		responseType: expect.responseType,
+		responseToResult: function(response) {
+			var convertedResponse = expect.responseToResult(response);
+			return A2(_elm_lang$core$Result$map, func, convertedResponse);
+		}
+	};
+}
+
+
+// BODY
+
+function multipart(parts)
+{
+	var formData = new FormData();
+
+	while (parts.ctor !== '[]')
+	{
+		var part = parts._0;
+		formData.append(part._0, part._1);
+		parts = parts._1;
+	}
+
+	return { ctor: 'FormDataBody', _0: formData };
+}
+
+return {
+	toTask: F2(toTask),
+	expectStringResponse: expectStringResponse,
+	mapExpect: F2(mapExpect),
+	multipart: multipart,
+	encodeUri: encodeUri,
+	decodeUri: decodeUri
+};
+
+}();
+
+var _elm_lang$http$Http_Internal$map = F2(
+	function (func, request) {
+		return _elm_lang$core$Native_Utils.update(
+			request,
+			{
+				expect: A2(_elm_lang$http$Native_Http.mapExpect, func, request.expect)
+			});
+	});
+var _elm_lang$http$Http_Internal$RawRequest = F7(
+	function (a, b, c, d, e, f, g) {
+		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g};
+	});
+var _elm_lang$http$Http_Internal$Request = function (a) {
+	return {ctor: 'Request', _0: a};
+};
+var _elm_lang$http$Http_Internal$Expect = {ctor: 'Expect'};
+var _elm_lang$http$Http_Internal$FormDataBody = {ctor: 'FormDataBody'};
+var _elm_lang$http$Http_Internal$StringBody = F2(
+	function (a, b) {
+		return {ctor: 'StringBody', _0: a, _1: b};
+	});
+var _elm_lang$http$Http_Internal$EmptyBody = {ctor: 'EmptyBody'};
+var _elm_lang$http$Http_Internal$Header = F2(
+	function (a, b) {
+		return {ctor: 'Header', _0: a, _1: b};
+	});
+
+var _elm_lang$http$Http$decodeUri = _elm_lang$http$Native_Http.decodeUri;
+var _elm_lang$http$Http$encodeUri = _elm_lang$http$Native_Http.encodeUri;
+var _elm_lang$http$Http$expectStringResponse = _elm_lang$http$Native_Http.expectStringResponse;
+var _elm_lang$http$Http$expectJson = function (decoder) {
+	return _elm_lang$http$Http$expectStringResponse(
+		function (response) {
+			return A2(_elm_lang$core$Json_Decode$decodeString, decoder, response.body);
+		});
+};
+var _elm_lang$http$Http$expectString = _elm_lang$http$Http$expectStringResponse(
+	function (response) {
+		return _elm_lang$core$Result$Ok(response.body);
+	});
+var _elm_lang$http$Http$multipartBody = _elm_lang$http$Native_Http.multipart;
+var _elm_lang$http$Http$stringBody = _elm_lang$http$Http_Internal$StringBody;
+var _elm_lang$http$Http$jsonBody = function (value) {
+	return A2(
+		_elm_lang$http$Http_Internal$StringBody,
+		'application/json',
+		A2(_elm_lang$core$Json_Encode$encode, 0, value));
+};
+var _elm_lang$http$Http$emptyBody = _elm_lang$http$Http_Internal$EmptyBody;
+var _elm_lang$http$Http$header = _elm_lang$http$Http_Internal$Header;
+var _elm_lang$http$Http$request = _elm_lang$http$Http_Internal$Request;
+var _elm_lang$http$Http$post = F3(
+	function (url, body, decoder) {
+		return _elm_lang$http$Http$request(
+			{
+				method: 'POST',
+				headers: {ctor: '[]'},
+				url: url,
+				body: body,
+				expect: _elm_lang$http$Http$expectJson(decoder),
+				timeout: _elm_lang$core$Maybe$Nothing,
+				withCredentials: false
+			});
+	});
+var _elm_lang$http$Http$get = F2(
+	function (url, decoder) {
+		return _elm_lang$http$Http$request(
+			{
+				method: 'GET',
+				headers: {ctor: '[]'},
+				url: url,
+				body: _elm_lang$http$Http$emptyBody,
+				expect: _elm_lang$http$Http$expectJson(decoder),
+				timeout: _elm_lang$core$Maybe$Nothing,
+				withCredentials: false
+			});
+	});
+var _elm_lang$http$Http$getString = function (url) {
+	return _elm_lang$http$Http$request(
+		{
+			method: 'GET',
+			headers: {ctor: '[]'},
+			url: url,
+			body: _elm_lang$http$Http$emptyBody,
+			expect: _elm_lang$http$Http$expectString,
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false
+		});
+};
+var _elm_lang$http$Http$toTask = function (_p0) {
+	var _p1 = _p0;
+	return A2(_elm_lang$http$Native_Http.toTask, _p1._0, _elm_lang$core$Maybe$Nothing);
+};
+var _elm_lang$http$Http$send = F2(
+	function (resultToMessage, request) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			resultToMessage,
+			_elm_lang$http$Http$toTask(request));
+	});
+var _elm_lang$http$Http$Response = F4(
+	function (a, b, c, d) {
+		return {url: a, status: b, headers: c, body: d};
+	});
+var _elm_lang$http$Http$BadPayload = F2(
+	function (a, b) {
+		return {ctor: 'BadPayload', _0: a, _1: b};
+	});
+var _elm_lang$http$Http$BadStatus = function (a) {
+	return {ctor: 'BadStatus', _0: a};
+};
+var _elm_lang$http$Http$NetworkError = {ctor: 'NetworkError'};
+var _elm_lang$http$Http$Timeout = {ctor: 'Timeout'};
+var _elm_lang$http$Http$BadUrl = function (a) {
+	return {ctor: 'BadUrl', _0: a};
+};
+var _elm_lang$http$Http$StringPart = F2(
+	function (a, b) {
+		return {ctor: 'StringPart', _0: a, _1: b};
+	});
+var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
+
 var _elm_lang$keyboard$Keyboard$onSelfMsg = F3(
 	function (router, _p0, state) {
 		var _p1 = _p0;
@@ -9710,6 +10071,30 @@ var _elm_lang$keyboard$Keyboard$subMap = F2(
 	});
 _elm_lang$core$Native_Platform.effectManagers['Keyboard'] = {pkg: 'elm-lang/keyboard', init: _elm_lang$keyboard$Keyboard$init, onEffects: _elm_lang$keyboard$Keyboard$onEffects, onSelfMsg: _elm_lang$keyboard$Keyboard$onSelfMsg, tag: 'sub', subMap: _elm_lang$keyboard$Keyboard$subMap};
 
+var _user$project$Main$apiKey = '49ae65ebf81d165927b9cc4ff3d83fb0';
+var _user$project$Main$makeBody = function (paste) {
+	return _elm_lang$http$Http$multipartBody(
+		{
+			ctor: '::',
+			_0: A2(_elm_lang$http$Http$stringPart, 'api_dev_key', _user$project$Main$apiKey),
+			_1: {
+				ctor: '::',
+				_0: A2(_elm_lang$http$Http$stringPart, 'api_option', 'paste'),
+				_1: {
+					ctor: '::',
+					_0: A2(_elm_lang$http$Http$stringPart, 'api_paste_code', paste),
+					_1: {ctor: '[]'}
+				}
+			}
+		});
+};
+var _user$project$Main$makeRequest = function (paste) {
+	return A3(
+		_elm_lang$http$Http$post,
+		'https://pastebin.com/api/api_post.php',
+		_user$project$Main$makeBody(paste),
+		_elm_lang$core$Json_Decode$string);
+};
 var _user$project$Main$mfStyleHx = _elm_lang$html$Html_Attributes$style(
 	{
 		ctor: '::',
@@ -9827,9 +10212,9 @@ var _user$project$Main$Trial = F4(
 	function (a, b, c, d) {
 		return {direction: a, position: b, tries: c, startedAt: d};
 	});
-var _user$project$Main$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {phase: a, gamer: b, test: c, trials1: d, trials2: e, readyToEnd: f};
+var _user$project$Main$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {phase: a, gamer: b, test: c, trials1: d, trials2: e, readyToEnd: f, pasteUrl: g};
 	});
 var _user$project$Main$WrapUp = {ctor: 'WrapUp'};
 var _user$project$Main$Instructions2 = {ctor: 'Instructions2'};
@@ -9866,6 +10251,9 @@ var _user$project$Main$whichTestGenerator = A2(
 		return b ? _user$project$Main$Interference : _user$project$Main$NonInterference;
 	},
 	_elm_lang$core$Random$bool);
+var _user$project$Main$GotPasteUrl = function (a) {
+	return {ctor: 'GotPasteUrl', _0: a};
+};
 var _user$project$Main$NewArrowConfig = function (a) {
 	return {ctor: 'NewArrowConfig', _0: a};
 };
@@ -9880,7 +10268,8 @@ var _user$project$Main$init = {
 		test: _user$project$Main$NonInterference,
 		trials1: {ctor: '[]'},
 		trials2: {ctor: '[]'},
-		readyToEnd: false
+		readyToEnd: false,
+		pasteUrl: _elm_lang$core$Maybe$Nothing
 	},
 	_1: A2(_elm_lang$core$Random$generate, _user$project$Main$WhichTestFirst, _user$project$Main$whichTestGenerator)
 };
@@ -9960,7 +10349,14 @@ var _user$project$Main$update = F2(
 									_0: _elm_lang$core$Native_Utils.update(
 										model,
 										{test: newTest, phase: newPhase, readyToEnd: !model.readyToEnd}),
-									_1: _elm_lang$core$Platform_Cmd$none
+									_1: _elm_lang$core$Native_Utils.eq(newPhase, _user$project$Main$WrapUp) ? A2(
+										_elm_lang$http$Http$send,
+										_user$project$Main$GotPasteUrl,
+										_user$project$Main$makeRequest(
+											A2(
+												_elm_lang$core$Json_Encode$encode,
+												0,
+												_user$project$Main$encodeOutput(model)))) : _elm_lang$core$Platform_Cmd$none
 								};
 							}
 						} else {
@@ -10054,7 +10450,7 @@ var _user$project$Main$update = F2(
 						model,
 						{test: _p0._0}),
 					{ctor: '[]'});
-			default:
+			case 'NewArrowConfig':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
@@ -10063,6 +10459,29 @@ var _user$project$Main$update = F2(
 						_user$project$Main$CreateNextTrial(_p0._0),
 						_elm_lang$core$Time$now)
 				};
+			default:
+				var _p12 = _p0._0;
+				if (_p12.ctor === 'Ok') {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pasteUrl: _elm_lang$core$Maybe$Just(_p12._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								pasteUrl: _elm_lang$core$Maybe$Just('Failed to load paste url...')
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				}
 		}
 	});
 var _user$project$Main$NextScreen = {ctor: 'NextScreen'};
@@ -10091,8 +10510,8 @@ var _user$project$Main$view = function (model) {
 			_1: {
 				ctor: '::',
 				_0: function () {
-					var _p12 = model.phase;
-					switch (_p12.ctor) {
+					var _p13 = model.phase;
+					switch (_p13.ctor) {
 						case 'UserInfo':
 							return A2(
 								_elm_lang$html$Html$div,
@@ -10275,9 +10694,9 @@ var _user$project$Main$view = function (model) {
 						case 'Testing':
 							var trials = _elm_lang$core$Native_Utils.eq(model.test, _user$project$Main$NonInterference) ? model.trials1 : model.trials2;
 							var trial_ = function () {
-								var _p13 = trials;
-								if (_p13.ctor === '::') {
-									return _elm_lang$core$Maybe$Just(_p13._0);
+								var _p14 = trials;
+								if (_p14.ctor === '::') {
+									return _elm_lang$core$Maybe$Just(_p14._0);
 								} else {
 									return _elm_lang$core$Maybe$Nothing;
 								}
@@ -10303,10 +10722,10 @@ var _user$project$Main$view = function (model) {
 									_1: {
 										ctor: '::',
 										_0: function () {
-											var _p14 = trial_;
-											if (_p14.ctor === 'Just') {
-												var _p15 = _p14._0;
-												var imgSrc = (_elm_lang$core$Native_Utils.eq(_p15.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p15.position, _user$project$Main$Top)) ? 'images/top-up.png' : ((_elm_lang$core$Native_Utils.eq(_p15.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p15.position, _user$project$Main$Top)) ? 'images/top-down.png' : ((_elm_lang$core$Native_Utils.eq(_p15.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p15.position, _user$project$Main$Bottom)) ? 'images/bottom-up.png' : ((_elm_lang$core$Native_Utils.eq(_p15.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p15.position, _user$project$Main$Bottom)) ? 'images/bottom-down.png' : ((_elm_lang$core$Native_Utils.eq(_p15.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p15.position, _user$project$Main$Middle)) ? 'images/middle-up.png' : ((_elm_lang$core$Native_Utils.eq(_p15.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p15.position, _user$project$Main$Middle)) ? 'images/middle-down.png' : '')))));
+											var _p15 = trial_;
+											if (_p15.ctor === 'Just') {
+												var _p16 = _p15._0;
+												var imgSrc = (_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Top)) ? 'images/top-up.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Top)) ? 'images/top-down.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Bottom)) ? 'images/bottom-up.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Bottom)) ? 'images/bottom-down.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Up) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Middle)) ? 'images/middle-up.png' : ((_elm_lang$core$Native_Utils.eq(_p16.direction, _user$project$Main$Down) && _elm_lang$core$Native_Utils.eq(_p16.position, _user$project$Main$Middle)) ? 'images/middle-down.png' : '')))));
 												return A2(
 													_elm_lang$html$Html$div,
 													{
@@ -10358,7 +10777,7 @@ var _user$project$Main$view = function (model) {
 										{ctor: '[]'},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text('Thank you so much for completing this test! Please copy the following test and paste it on Pastebin,\n                    then post the link to the paste in the Reddit thread! Again, thank you so much!'),
+											_0: _elm_lang$html$Html$text('Thank you so much for completing this test! Please paste the following link the in the Reddit thread! Again, thank you so much!'),
 											_1: {ctor: '[]'}
 										}),
 									_1: {
@@ -10368,48 +10787,11 @@ var _user$project$Main$view = function (model) {
 											{ctor: '[]'},
 											{
 												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$a,
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$href('http://pastebin.com'),
-														_1: {
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$target('_blank'),
-															_1: {ctor: '[]'}
-														}
-													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text('Link to Pastebin'),
-														_1: {ctor: '[]'}
-													}),
+												_0: _elm_lang$html$Html$text(
+													A2(_elm_lang$core$Maybe$withDefault, 'Loading URL.....', model.pasteUrl)),
 												_1: {ctor: '[]'}
 											}),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$textarea,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$rows(20),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$cols(50),
-														_1: {ctor: '[]'}
-													}
-												},
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html$text(
-														A2(
-															_elm_lang$core$Json_Encode$encode,
-															0,
-															_user$project$Main$encodeOutput(model))),
-													_1: {ctor: '[]'}
-												}),
-											_1: {ctor: '[]'}
-										}
+										_1: {ctor: '[]'}
 									}
 								});
 					}

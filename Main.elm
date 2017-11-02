@@ -9,6 +9,8 @@ import Random
 import Random.Extra
 import Keyboard
 import Json.Encode as JE
+import Json.Decode as JD
+import Http
 
 
 encodeOutput : Model -> JE.Value
@@ -79,6 +81,7 @@ type alias Model =
     , trials1 : List Trial
     , trials2 : List Trial
     , readyToEnd : Bool
+    , pasteUrl: Maybe String
     }
 
 
@@ -89,6 +92,7 @@ type Msg
     | IsGamer Bool
     | WhichTestFirst TestType
     | NewArrowConfig ( ArrowDirection, ArrowPosition )
+    | GotPasteUrl (Result Http.Error String)
 
 
 
@@ -199,7 +203,7 @@ update msg model =
                                                     , phase = newPhase
                                                     , readyToEnd = not model.readyToEnd
                                                   }
-                                                , Cmd.none
+                                                , if newPhase == WrapUp then (Http.send GotPasteUrl (makeRequest (JE.encode 0 (encodeOutput model)))) else Cmd.none
                                                 )
 
                                     Nothing ->
@@ -257,6 +261,11 @@ update msg model =
             NewArrowConfig config ->
                 ( model, Task.perform (CreateNextTrial config) Time.now )
 
+            GotPasteUrl res ->
+                case res of
+                    Ok url ->
+                        ({model | pasteUrl = Just url}, Cmd.none)
+                    _ -> ({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
 
 view : Model -> Html Msg
 view model =
@@ -344,12 +353,8 @@ view model =
 
             WrapUp ->
                 div []
-                    [ p [] [ text """Thank you so much for completing this test! Please copy the following test and paste it on Pastebin,
-                    then post the link to the paste in the Reddit thread! Again, thank you so much!""" ]
-                    , p [] [ a [ href "http://pastebin.com", target "_blank" ] [ text "Link to Pastebin" ] ]
-                    , textarea [ rows 20, cols 50 ]
-                        [ text <| (JE.encode 0 (encodeOutput model))
-                        ]
+                    [ p [] [ text """Thank you so much for completing this test! Please paste the following link the in the Reddit thread! Again, thank you so much!""" ]
+                    , p [] [ text (Maybe.withDefault "Loading URL....."  model.pasteUrl) ]
                     ]
 
         -- _ ->
@@ -408,6 +413,26 @@ arrowConfigGeneratorNonInterference =
     Random.pair arrowDirectionGenerator <| Random.Extra.constant Middle
 
 
+apiKey : String
+apiKey =
+    "49ae65ebf81d165927b9cc4ff3d83fb0"
+
+
+makeBody paste =
+    Http.multipartBody
+        [ Http.stringPart "api_dev_key" apiKey
+        , Http.stringPart "api_option" "paste"
+        , Http.stringPart "api_paste_code" paste
+        ]
+
+makeRequest : String -> Http.Request String
+makeRequest paste =
+    Http.post 
+        "https://pastebin.com/api/api_post.php"
+        (makeBody paste)
+        JD.string
+
+
 init : ( Model, Cmd Msg )
 init =
     ( { phase = UserInfo
@@ -416,6 +441,7 @@ init =
       , trials1 = []
       , trials2 = []
       , readyToEnd = False
+      , pasteUrl = Nothing
       }
     , Random.generate (WhichTestFirst) whichTestGenerator
     )
