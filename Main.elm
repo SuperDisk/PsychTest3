@@ -346,7 +346,7 @@ view model =
                 div []
                     [ p [] [ text """Thank you so much for completing this test! Please copy the following test and paste it on Pastebin,
                     then post the link to the paste in the Reddit thread! Again, thank you so much!""" ]
-                    , p [] [ a [ href "http://pastebin.com" ] [ text "Link to Pastebin" ] ]
+                    , p [] [ a [ href "http://pastebin.com", target "_blank"] [ text "Link to Pastebin" ] ]
                     , textarea [ rows 20, cols 50 ]
                         [ text <| (JE.encode 0 (encodeOutput model))
                         ]

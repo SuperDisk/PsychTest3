@@ -10373,7 +10373,11 @@ var _user$project$Main$view = function (model) {
 													{
 														ctor: '::',
 														_0: _elm_lang$html$Html_Attributes$href('http://pastebin.com'),
-														_1: {ctor: '[]'}
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$target('_blank'),
+															_1: {ctor: '[]'}
+														}
 													},
 													{
 														ctor: '::',
