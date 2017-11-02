@@ -266,10 +266,10 @@ update msg model =
                     Ok url ->
                         ({model | pasteUrl = Just url}, Cmd.none)
 
-                    Err err ->
-                        ({model | pasteUrl = Just <| toString err}, Cmd.none)
+                    --Err err ->
+                        --({model | pasteUrl = Just <| toString err}, Cmd.none)
 
-                   -- _ -> ({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
+                    _ -> ({model | pasteUrl = Just "Failed to load paste url..."}, Cmd.none)
 
 view : Model -> Html Msg
 view model =
@@ -357,8 +357,10 @@ view model =
 
             WrapUp ->
                 div []
-                    [ p [] [ text """Thank you so much for completing this test! Please paste the following link the in the Reddit thread! Again, thank you so much!""" ]
+                    [ p [] [ text """Thank you for completing this test! Please paste the following link the in the Reddit thread! If the link fails to generate, please copy and paste the contents of the textbox to Pastebin and post or PM me the link.""" ]
                     , p [] [ text (Maybe.withDefault "Loading URL....."  model.pasteUrl) ]
+                    , textarea [rows 25, cols 80] [text (JE.encode 0 (encodeOutput model))]
+                    , p [] [ text "Again, thank you so much for doing this test!" ]
                     ]
 
         -- _ ->
